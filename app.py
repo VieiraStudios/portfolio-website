@@ -40,6 +40,8 @@ app.config["MAX_CONTENT_LENGTH"] = 64 * 1024  # reject request bodies over 64 KB
 def database_url() -> str:
     """Postgres (Neon) in production; a local SQLite file for development."""
     url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    if not url and ON_VERCEL:
+        raise RuntimeError("Connect a Neon database in your Vercel project (Storage tab), then redeploy.")
     if not url:
         Path(app.instance_path).mkdir(parents=True, exist_ok=True)
         return "sqlite:///" + str(Path(app.instance_path) / "messages.db")
