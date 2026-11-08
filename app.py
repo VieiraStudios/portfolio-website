@@ -55,6 +55,10 @@ def database_url() -> str:
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url()
 # Check connections are alive before use; serverless databases close idle ones.
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
+if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+    # Neon's pooled connection (PgBouncer) shares connections between requests,
+    # so don't let psycopg cache prepared statements on them.
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"]["connect_args"] = {"prepare_threshold": None}
 
 
 class Base(DeclarativeBase):
