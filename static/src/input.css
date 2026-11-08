@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------
+   Brand theme: each variable becomes Tailwind classes, e.g.
+   --color-mint -> bg-mint, text-mint, border-mint ...
+   --font-display -> font-display
+------------------------------------------------------------------- */
+@theme {
+  --color-night: #0E0B1A;
+  --color-night-soft: #171327;
+  --color-lavender: #F4F1FF;
+  --color-ultraviolet: #7C3AED;
+  --color-mint: #2EE6A6;
+
+  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  ::selection {
+    background: var(--color-mint);
+    color: var(--color-night);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-mint);
+    outline-offset: 3px;
+  }
+}
+
+/* Faint grid pattern used behind hero sections and project visuals */
+.bg-grid {
+  background-image:
+    linear-gradient(to right, rgb(244 241 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(244 241 255 / 0.06) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+/* Hero headline: each line rises into view on page load */
+.hero-line {
+  display: block;
+  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.hero-line:nth-child(2) { animation-delay: 0.12s; }
+.hero-fade { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(0.6em); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Soft glowing blobs that slowly drift behind the hero */
+.glow-drift { animation: drift 14s ease-in-out infinite alternate; }
+.glow-drift-slow { animation: drift 20s ease-in-out infinite alternate-reverse; }
+
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(6rem, 3rem) scale(1.15); }
+}
+
+/* Rotating words: "We build [mobile apps -> web apps -> AI products]" */
+.rotator {
+  display: inline-block;
+  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.45s ease;
+}
+.rotator.is-out  { transform: translateY(-0.6em); opacity: 0; }
+.rotator.is-prep { transform: translateY(0.6em); opacity: 0; transition: none; }
+
+/* Endless scrolling band of text */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Scroll reveal: only hidden when JavaScript is running (html.js) */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Respect visitors who turn off animations in their device settings */
+@media (prefers-reduced-motion: reduce) {
+  .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .marquee-track { animation: none; }
+  .js [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .rotator { transition: none; }
+}
