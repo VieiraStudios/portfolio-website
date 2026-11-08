@@ -10,6 +10,7 @@ from pathlib import Path
 import click
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -81,7 +82,13 @@ class Message(db.Model):
 
 
 with app.app_context():
-    db.create_all()  # creates the table the first time; does nothing after that
+    try:
+        db.create_all()  # creates the table the first time; does nothing after that
+    except exc.SQLAlchemyError:
+        # Two serverless instances starting at once can race to create the
+        # table; if another one won, the table exists and we can carry on.
+        db.session.rollback()
+        app.logger.warning("create_all skipped: table is probably being created by another instance")
 
 # Simple rate limit for the contact form: max submissions per IP per window.
 CONTACT_LIMIT = 5
