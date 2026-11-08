@@ -13,3 +13,9 @@ wheels/
 .env
 .env.*
 !.env.example
+
+# Local instance data (saved contact messages)
+instance/
+
+# Test cache
+.pytest_cache/
