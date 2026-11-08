@@ -23,6 +23,66 @@ function setupSmoothScroll() {
     lerp: 0.1, // how quickly scrolling catches up (lower = floatier)
     anchors: true, // smooth-scroll to #links such as "Skip to content"
   });
+
+  setupSectionSnap(window.lenis);
+}
+
+// Section snapping: when you stop scrolling and the next section (in the
+// direction you were scrolling) is already well into view, the page glides the
+// rest of the way so that section lines up with the top of the screen.
+// If no section edge is close, nothing happens, so you can stop anywhere
+// inside a tall section to read it. Tweak the two numbers to taste.
+const SNAP_AHEAD = 0.6; // snap if the next section's top is within 60% of the screen height
+const SNAP_ALIGN = 0.06; // also tidy up if you stop within 6% of any section top
+
+function setupSectionSnap(lenis) {
+  const sections = [...document.querySelectorAll("main > section, body > section, body > footer")];
+  if (sections.length < 2) return;
+
+  let timer;
+  let snapping = false;
+  let lastDirection = 1; // 1 = scrolling down, -1 = scrolling up
+
+  // Any new wheel/trackpad input cancels a snap in progress.
+  lenis.on("virtual-scroll", () => {
+    snapping = false;
+  });
+
+  lenis.on("scroll", ({ direction }) => {
+    if (direction) lastDirection = direction;
+    if (snapping) return;
+    clearTimeout(timer);
+    timer = setTimeout(snapToNearbySection, 140); // runs once scrolling has stopped
+  });
+
+  function snapToNearbySection() {
+    const y = lenis.scroll;
+    const screen = window.innerHeight;
+    const maxY = document.documentElement.scrollHeight - screen;
+    const tops = sections.map((s) => Math.min(Math.round(s.getBoundingClientRect().top + y), maxY));
+
+    const ahead =
+      lastDirection > 0
+        ? tops.filter((t) => t > y + 1).sort((a, b) => a - b)[0]
+        : tops.filter((t) => t < y - 1).sort((a, b) => b - a)[0];
+
+    let target;
+    if (ahead !== undefined && Math.abs(ahead - y) <= screen * SNAP_AHEAD) {
+      target = ahead;
+    } else {
+      target = tops.find((t) => Math.abs(t - y) > 1 && Math.abs(t - y) <= screen * SNAP_ALIGN);
+    }
+    if (target === undefined) return;
+
+    snapping = true;
+    lenis.scrollTo(target, {
+      duration: 0.8,
+      easing: (t) => 1 - Math.pow(1 - t, 3), // fast start, gentle finish
+      onComplete: () => {
+        snapping = false;
+      },
+    });
+  }
 }
 
 // Open/close the navigation menu on small screens.
