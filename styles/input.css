@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+@custom-variant tall {
+  @media (min-width: 1024px) and (min-height: 850px) {
+    @slot;
+  }
+}
+
+@custom-variant wide {
+  @media (min-width: 1536px) and (min-height: 920px) {
+    @slot;
+  }
+}
+
 /* ------------------------------------------------------------------
    Brand theme: each variable becomes Tailwind classes, e.g.
    --color-mint -> bg-mint, text-mint, border-mint ...
@@ -17,6 +29,11 @@
 }
 
 @layer base {
+  html,
+  body {
+    overflow-x: clip;
+  }
+
   ::selection {
     background: var(--color-mint);
     color: var(--color-night);
@@ -53,16 +70,61 @@ html.lenis body {
   mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 
+/* Header elevation and progress hairline on scroll */
+[data-header] {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+[data-header].is-scrolled,
+[data-header].is-menu-open {
+  background-color: rgb(14 11 26 / 0.92);
+  border-color: rgb(244 241 255 / 0.14);
+  box-shadow: 0 12px 32px -12px rgb(0 0 0 / 0.55);
+}
+
+[data-scroll-progress] {
+  transform-origin: left center;
+  transform: scaleX(0);
+  will-change: transform;
+}
+
+/* Interactive cursor-tracking spotlight on cards */
+.spotlight-card {
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+  position: relative;
+}
+.spotlight-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    460px circle at var(--mouse-x) var(--mouse-y),
+    rgb(46 230 166 / 0.1),
+    rgb(124 58 237 / 0.06) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.spotlight-card:hover::before {
+  opacity: 1;
+}
+
 /* Hero headline: each line rises into view on page load */
 .hero-line {
   display: block;
-  animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+  animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.hero-line:nth-child(2) { animation-delay: 0.12s; }
-.hero-fade { animation: rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.3s both; }
+.hero-line:nth-child(2) { animation-delay: 0.1s; }
+.hero-fade { animation: rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(0.6em); }
+  from { opacity: 0; transform: translateY(0.45em); }
   to   { opacity: 1; transform: none; }
 }
 
@@ -79,10 +141,10 @@ html.lenis body {
 .rotator {
   display: inline-block;
   white-space: nowrap;
-  transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.45s ease;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
 }
-.rotator.is-out  { transform: translateY(-0.6em); opacity: 0; }
-.rotator.is-prep { transform: translateY(0.6em); opacity: 0; transition: none; }
+.rotator.is-out  { transform: translateY(-0.55em); opacity: 0; }
+.rotator.is-prep { transform: translateY(0.55em); opacity: 0; transition: none; }
 
 /* Blinking text cursor in the About page code card */
 .code-cursor {
@@ -97,11 +159,19 @@ html.lenis body {
   50% { opacity: 0; }
 }
 
+/* Magnetic interactive elements */
+[data-magnetic] {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+}
+
 /* Scroll reveal: only hidden when JavaScript is running (html.js) */
 .js [data-reveal] {
   opacity: 0;
-  transform: translateY(2rem);
-  transition: opacity 0.8s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transform: translateY(1.15rem);
+  transition:
+    opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .js [data-reveal].is-visible {
   opacity: 1;
@@ -112,5 +182,6 @@ html.lenis body {
 @media (prefers-reduced-motion: reduce) {
   .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .code-cursor { animation: none; }
   .js [data-reveal] { opacity: 1; transform: none; transition: none; }
-  .rotator { transition: none; }
+  .rotator, [data-magnetic] { transition: none; }
+  [data-scroll-progress] { display: none; }
 }

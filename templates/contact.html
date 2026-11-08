@@ -8,50 +8,49 @@
 {% block cta %}{% endblock %}
 
 {% block content %}
-<section class="relative isolate overflow-hidden pb-24 pt-40 md:pb-32">
-  <div class="bg-grid absolute inset-0 -z-10"></div>
-  <div class="glow-drift absolute -left-40 -top-40 -z-10 size-[34rem] rounded-full bg-ultraviolet/40 blur-[120px]" aria-hidden="true"></div>
-  <div class="glow-drift-slow absolute -bottom-40 -right-40 -z-10 size-[28rem] rounded-full bg-mint/20 blur-[120px]" aria-hidden="true"></div>
-
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="hero-fade">{{ eyebrow("04 · Contact") }}</div>
-    <h1 class="font-display text-[clamp(3rem,10vw,8rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
-      <span class="hero-line">Let's build</span>
-      <span class="hero-line text-mint">something.</span>
-    </h1>
+<section class="relative isolate flex flex-1 items-center overflow-hidden pb-14 pt-24 sm:pb-20 sm:pt-32 lg:pb-8 lg:pt-25 tall:pb-12 tall:pt-29 wide:pb-16 wide:pt-33">
+  <div class="bg-grid absolute inset-0 -z-10" data-parallax="0.06"></div>
+  <div class="pointer-events-none absolute inset-0 -z-10" data-parallax="-0.1" aria-hidden="true">
+    <div class="glow-drift absolute -left-40 -top-40 size-[34rem] rounded-full bg-ultraviolet/40 blur-[120px]"></div>
+    <div class="glow-drift-slow absolute -bottom-40 -right-40 size-[28rem] rounded-full bg-mint/20 blur-[120px]"></div>
   </div>
 
-  <div class="mx-auto mt-16 grid max-w-7xl gap-16 px-4 sm:px-6 lg:grid-cols-[1fr_1.4fr] lg:px-8">
+  <div class="mx-auto grid w-full max-w-7xl items-center gap-10 px-4 sm:gap-12 sm:px-6 lg:grid-cols-[0.95fr_1.25fr] lg:items-center lg:gap-14 lg:px-8 tall:gap-16 wide:max-w-[88rem]">
     <div class="min-w-0">
-      <p class="hero-fade max-w-md text-lg text-lavender/70">Tell me about your idea, product or problem. A few sentences is plenty to get started, and I'll get back to you by email.</p>
+      <div class="hero-fade">{{ eyebrow("04 · Contact") }}</div>
+      <h1 class="font-display text-[clamp(2.75rem,6vw,4.75rem)] font-extrabold leading-[0.96] tracking-[-0.03em] tall:text-[clamp(3rem,6vw,5.25rem)]">
+        <span class="hero-line">Let's build</span>
+        <span class="hero-line text-mint">something.</span>
+      </h1>
+      <p class="hero-fade mt-5 max-w-md text-base leading-relaxed text-lavender/70 sm:text-lg tall:mt-6">Tell me about your idea, product or problem. A few sentences is plenty to get started, and I'll get back to you by email.</p>
 
-      <ul class="hero-fade mt-12 space-y-4">
-        {% for item in ["Mobile apps for iPhone and iPad", "Web apps and websites", "AI features and automation", "UI/UX design and prototypes"] %}
-        <li class="flex items-center gap-4 text-lavender/80">
-          <span class="grid size-8 place-items-center rounded-full bg-mint/15 text-mint">{{ icon("check", "size-4") }}</span>{{ item }}
+      <ul class="hero-fade mt-7 space-y-3 tall:mt-8 tall:space-y-3.5">
+        {% for item in ["Direct collaboration with the founder", "Clear scope, timeline and fixed milestones", "From first prototype to App Store & web launch"] %}
+        <li class="flex items-center gap-3.5 text-sm text-lavender/80 sm:text-base">
+          <span class="grid size-8 shrink-0 place-items-center rounded-full bg-mint/15 text-mint">{{ icon("check", "size-4") }}</span>{{ item }}
         </li>
         {% endfor %}
       </ul>
     </div>
 
-    <div class="hero-fade min-w-0 rounded-[2rem] border border-lavender/10 bg-night/70 p-6 backdrop-blur-xl sm:p-10">
+    <div class="hero-fade spotlight-card min-w-0 self-center overflow-hidden rounded-[2rem] border border-lavender/10 bg-night/70 p-6 backdrop-blur-xl sm:p-8 lg:p-7 tall:p-8 wide:p-10">
       {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, text in messages %}
-      <p class="mb-6 rounded-2xl border border-red-400/40 bg-red-400/10 px-5 py-4 text-red-200" role="alert">{{ text }}</p>
+      <p class="relative z-10 mb-6 rounded-2xl border border-red-400/40 bg-red-400/10 px-5 py-4 text-red-200" role="alert">{{ text }}</p>
       {% endfor %}
       {% endwith %}
 
       {% if sent %}
-      <div class="py-12 text-center" role="status">
+      <div class="relative z-10 py-12 text-center" role="status">
         <span class="mx-auto grid size-16 place-items-center rounded-full bg-mint text-night">{{ icon("check", "size-8") }}</span>
         <h2 class="mt-8 font-display text-4xl font-extrabold">Message sent.</h2>
         <p class="mx-auto mt-4 max-w-sm text-lavender/70">Thanks for reaching out. I'll read your message and reply by email soon.</p>
         <a href="{{ url_for('index') }}" class="mt-8 inline-block font-semibold text-mint hover:underline">Back to home</a>
       </div>
       {% else %}
-      <form method="post" action="{{ url_for('contact') }}" class="space-y-6" novalidate>
+      <form method="post" action="{{ url_for('contact') }}" class="relative z-10 space-y-4 tall:space-y-5" novalidate>
         {{ form.csrf_token }}
-        <div class="grid gap-6 sm:grid-cols-2">
+        <div class="grid gap-4 sm:grid-cols-2 tall:gap-5">
           {{ field(form.name, autocomplete="name", placeholder="Jane Smith") }}
           {{ field(form.email, autocomplete="email", placeholder="jane@company.com") }}
         </div>
@@ -59,11 +58,11 @@
         {{ field(form.message, "textarea") }}
 
         {# Honeypot field: hidden from people, tempting to bots #}
-        <div class="absolute -left-[9999px]" aria-hidden="true">
+        <div class="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0" aria-hidden="true">
           {{ form.website.label }} {{ form.website(tabindex="-1", autocomplete="off") }}
         </div>
 
-        <button type="submit" class="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-mint px-7 py-4 font-semibold text-night transition hover:bg-lavender">
+        <button type="submit" data-magnetic class="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-mint px-7 py-3.5 font-semibold text-night transition hover:bg-lavender tall:py-4">
           Send message {{ icon("arrow", "size-5 transition group-hover:translate-x-1") }}
         </button>
       </form>

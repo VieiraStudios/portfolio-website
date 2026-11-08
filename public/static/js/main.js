@@ -6,78 +6,120 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 
 document.addEventListener("DOMContentLoaded", () => {
   setupSmoothScroll();
+  setupScrollChoreography();
   setupMobileMenu();
   setupRotatingWords();
   setupScrollReveal();
   setupWorkFilter();
+  setupCursorSpotlight();
+  setupMagneticButtons();
 });
 
 // Smooth "inertia" scrolling with Lenis (public/static/js/vendor/lenis.min.js):
-// wheel and trackpad scrolling glides and eases to a stop. Phones and tablets
-// keep their native touch scrolling, which already feels smooth.
+// responsive enough for macOS trackpads without input mushiness, paired with
+// gentle desktop-only proximity snapping once scroll momentum settles.
 function setupSmoothScroll() {
   if (prefersReducedMotion || typeof window.Lenis !== "function") return;
 
   window.lenis = new window.Lenis({
-    autoRaf: true, // run Lenis's animation loop automatically
-    lerp: 0.1, // how quickly scrolling catches up (lower = floatier)
-    anchors: true, // smooth-scroll to #links such as "Skip to content"
+    autoRaf: true,
+    lerp: 0.16,
+    wheelMultiplier: 1.05,
+    smoothWheel: true,
+    anchors: true,
   });
 
   setupSectionSnap(window.lenis);
 }
 
-// Section snapping: when you stop scrolling and the next section (in the
-// direction you were scrolling) is already well into view, the page glides the
-// rest of the way so that section lines up with the top of the screen.
-// If no section edge is close, nothing happens, so you can stop anywhere
-// inside a tall section to read it. Tweak the two numbers to taste.
-const SNAP_AHEAD = 0.6; // snap if the next section's top is within 60% of the screen height
-const SNAP_ALIGN = 0.06; // also tidy up if you stop within 6% of any section top
-
+// Gentle desktop/laptop directional snapping:
+// - Only activates on multi-chapter pages (>= 3 snap sections: Home & About)
+//   and only on desktop/laptop viewports (>= 1024px with a mouse/trackpad).
+// - Only responds to actual wheel/trackpad momentum, so scrollbar dragging,
+//   keyboard navigation, and anchor jumps stay completely uninhibited.
+// - Advances cleanly into the next chapter once you scroll ~26% past the
+//   boundary in your scroll direction, or re-centers on the current edge.
 function setupSectionSnap(lenis) {
-  const sections = [...document.querySelectorAll("main > section, body > section, body > footer")];
+  const desktopQuery = window.matchMedia("(min-width: 1024px) and (pointer: fine)");
+  const sections = [...document.querySelectorAll("[data-snap-section]")];
   if (sections.length < 2) return;
 
-  let timer;
+  let settleTimer;
   let snapping = false;
-  let lastDirection = 1; // 1 = scrolling down, -1 = scrolling up
+  let hasWheelIntent = false;
+  let lastDirection = 1;
 
-  // Any new wheel/trackpad input cancels a snap in progress.
   lenis.on("virtual-scroll", () => {
+    hasWheelIntent = true;
     snapping = false;
+    clearTimeout(settleTimer);
   });
 
-  lenis.on("scroll", ({ direction }) => {
+  lenis.on("scroll", ({ direction, velocity }) => {
+    if (!desktopQuery.matches || !hasWheelIntent) return;
     if (direction) lastDirection = direction;
     if (snapping) return;
-    clearTimeout(timer);
-    timer = setTimeout(snapToNearbySection, 140); // runs once scrolling has stopped
+
+    clearTimeout(settleTimer);
+    const delay = Math.abs(velocity) > 0.4 ? 150 : 100;
+    settleTimer = setTimeout(tryDirectionalSnap, delay);
   });
 
-  function snapToNearbySection() {
-    const y = lenis.scroll;
-    const screen = window.innerHeight;
-    const maxY = document.documentElement.scrollHeight - screen;
-    const tops = sections.map((s) => Math.min(Math.round(s.getBoundingClientRect().top + y), maxY));
-
-    const ahead =
-      lastDirection > 0
-        ? tops.filter((t) => t > y + 1).sort((a, b) => a - b)[0]
-        : tops.filter((t) => t < y - 1).sort((a, b) => b - a)[0];
-
-    let target;
-    if (ahead !== undefined && Math.abs(ahead - y) <= screen * SNAP_AHEAD) {
-      target = ahead;
-    } else {
-      target = tops.find((t) => Math.abs(t - y) > 1 && Math.abs(t - y) <= screen * SNAP_ALIGN);
+  function tryDirectionalSnap() {
+    if (!desktopQuery.matches || !hasWheelIntent || snapping) return;
+    if (Math.abs(lenis.velocity) > 0.35) {
+      settleTimer = setTimeout(tryDirectionalSnap, 90);
+      return;
     }
-    if (target === undefined) return;
+
+    const y = lenis.scroll;
+    const vh = window.innerHeight;
+    const maxY = Math.max(0, document.documentElement.scrollHeight - vh);
+    if (maxY < 40) return;
+
+    const snapPoints = [
+      ...new Set(
+        sections.map((el) => Math.min(Math.max(0, Math.round(el.getBoundingClientRect().top + y)), maxY))
+      ),
+      maxY,
+    ].sort((a, b) => a - b);
+
+    // Already cleanly aligned to a section boundary
+    if (snapPoints.some((p) => Math.abs(p - y) <= 2)) {
+      hasWheelIntent = false;
+      return;
+    }
+
+    const curr = [...snapPoints].reverse().find((p) => p <= y + 2);
+    const next = snapPoints.find((p) => p > y + 2);
+    if (curr === undefined || next === undefined) {
+      hasWheelIntent = false;
+      return;
+    }
+
+    const span = next - curr;
+    let target;
+
+    if (span > vh * 1.15) {
+      // Oversized band fallback: only tidy-align within 10% of an edge
+      if (y - curr <= vh * 0.1) target = curr;
+      else if (next - y <= vh * 0.1) target = next;
+    } else if (lastDirection > 0) {
+      target = y - curr > span * 0.26 ? next : curr;
+    } else {
+      target = next - y > span * 0.26 ? curr : next;
+    }
+
+    if (target === undefined || Math.abs(target - y) <= 2) {
+      hasWheelIntent = false;
+      return;
+    }
 
     snapping = true;
+    hasWheelIntent = false;
     lenis.scrollTo(target, {
-      duration: 0.8,
-      easing: (t) => 1 - Math.pow(1 - t, 3), // fast start, gentle finish
+      duration: 0.7,
+      easing: (t) => 1 - Math.pow(1 - t, 4),
       onComplete: () => {
         snapping = false;
       },
@@ -85,16 +127,70 @@ function setupSectionSnap(lenis) {
   }
 }
 
+// Drive lightweight GPU-composited feedback (scroll progress hairline, header
+// elevation, and subtle ambient layer parallax) from Lenis or native scroll.
+function setupScrollChoreography() {
+  const header = document.querySelector("[data-header]");
+  const progress = document.querySelector("[data-scroll-progress]");
+  const parallaxEls = prefersReducedMotion ? [] : [...document.querySelectorAll("[data-parallax]")];
+  if (!header && !progress && !parallaxEls.length) return;
+
+  const update = (scrollY) => {
+    const y = typeof scrollY === "number" ? scrollY : window.scrollY;
+    const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+
+    if (header) {
+      header.classList.toggle("is-scrolled", y > 24);
+    }
+
+    if (progress) {
+      const ratio = Math.min(1, Math.max(0, y / maxScroll));
+      progress.style.transform = `scaleX(${ratio.toFixed(4)})`;
+    }
+
+    if (parallaxEls.length && y < window.innerHeight * 1.5) {
+      parallaxEls.forEach((el) => {
+        const speed = Number(el.dataset.parallax || 0);
+        el.style.transform = `translate3d(0, ${(y * speed).toFixed(1)}px, 0)`;
+      });
+    }
+  };
+
+  if (window.lenis) {
+    window.lenis.on("scroll", ({ scroll }) => update(scroll));
+  } else {
+    let ticking = false;
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          update();
+          ticking = false;
+        });
+      },
+      { passive: true }
+    );
+  }
+
+  window.addEventListener("resize", () => update(), { passive: true });
+  window.addEventListener("work:filtered", () => update());
+  update();
+}
+
 // Open/close the navigation menu on small screens.
 function setupMobileMenu() {
   const button = document.querySelector("[data-menu-button]");
   const menu = document.querySelector("[data-menu]");
+  const header = document.querySelector("[data-header]");
   if (!button || !menu) return;
 
   button.addEventListener("click", () => {
     const isOpen = button.getAttribute("aria-expanded") === "true";
     button.setAttribute("aria-expanded", String(!isOpen));
     menu.classList.toggle("hidden", isOpen);
+    if (header) header.classList.toggle("is-menu-open", !isOpen);
   });
 }
 
@@ -120,7 +216,7 @@ function setupRotatingWords() {
   }, 2600);
 }
 
-// Fade elements in as they scroll into view.
+// Fade elements in cleanly as they enter the viewport.
 function setupScrollReveal() {
   const items = document.querySelectorAll("[data-reveal]");
   if (!("IntersectionObserver" in window)) {
@@ -138,7 +234,7 @@ function setupScrollReveal() {
         observer.unobserve(entry.target); // only animate once
       });
     },
-    { threshold: 0.15 }
+    { threshold: 0.04, rootMargin: "0px 0px -20px 0px" }
   );
 
   items.forEach((item) => observer.observe(item));
@@ -158,7 +254,52 @@ function setupWorkFilter() {
       cards.forEach((card) => {
         const show = filter === "all" || card.dataset.category === filter;
         card.classList.toggle("hidden", !show);
+        if (show) {
+          card.classList.add("is-visible");
+        }
       });
+
+      if (window.lenis) {
+        window.lenis.resize();
+      }
+      window.dispatchEvent(new Event("work:filtered"));
+    });
+  });
+}
+
+// Track mouse position across .spotlight-card elements to render a soft
+// radial light follow effect.
+function setupCursorSpotlight() {
+  if (prefersReducedMotion || !window.matchMedia("(pointer: fine)").matches) return;
+  const cards = document.querySelectorAll(".spotlight-card");
+  if (!cards.length) return;
+
+  cards.forEach((card) => {
+    card.addEventListener("pointermove", (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty("--mouse-x", `${x}px`);
+      card.style.setProperty("--mouse-y", `${y}px`);
+    });
+  });
+}
+
+// Subtle magnetic pull on primary buttons and CTAs when hovered with a mouse.
+function setupMagneticButtons() {
+  if (prefersReducedMotion || !window.matchMedia("(pointer: fine)").matches) return;
+  const magnets = document.querySelectorAll("[data-magnetic]");
+
+  magnets.forEach((el) => {
+    el.addEventListener("pointermove", (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = (e.clientX - rect.left - rect.width / 2) * 0.18;
+      const y = (e.clientY - rect.top - rect.height / 2) * 0.22;
+      el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+    });
+
+    el.addEventListener("pointerleave", () => {
+      el.style.transform = "";
     });
   });
 }

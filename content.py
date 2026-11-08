@@ -28,7 +28,7 @@ SERVICES = [
 ]
 
 PROCESS = [
-    {"title": "Discover", "description": "We dig into your idea, your users and your goals, and agree on what success looks like."},
+    {"title": "Discover", "description": "I dig into your idea, your users and your goals to define what success looks like."},
     {"title": "Design", "description": "Flows, wireframes and polished visuals, so you can see and feel the product before it is built."},
     {"title": "Build", "description": "Clean, tested code shipped in short cycles, with regular demos so you are never in the dark."},
     {"title": "Launch", "description": "App Store and web launch, monitoring and ongoing improvements once real users arrive."},

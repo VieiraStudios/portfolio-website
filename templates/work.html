@@ -1,45 +1,46 @@
 {% extends "base.html" %}
-{% from "partials/macros.html" import icon, eyebrow, project_card %}
+{% from "partials/macros.html" import eyebrow, project_card %}
 
 {% block title %}Work | Vieira Studios{% endblock %}
 {% block description %}Mobile apps, web apps and AI products designed and built by Vieira Studios.{% endblock %}
 
 {% block content %}
-<section class="relative isolate overflow-hidden pb-16 pt-40">
-  <div class="bg-grid absolute inset-0 -z-10"></div>
-  <div class="glow-drift absolute -right-40 -top-40 -z-10 size-[32rem] rounded-full bg-ultraviolet/40 blur-[120px]" aria-hidden="true"></div>
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <div class="hero-fade">{{ eyebrow("02 · Work") }}</div>
-    <h1 class="font-display text-[clamp(3.5rem,11vw,9rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
-      <span class="hero-line">Selected</span>
-      <span class="hero-line text-mint">work.</span>
-    </h1>
-    <p class="hero-fade mt-8 max-w-2xl text-lg text-lavender/70">A growing collection of mobile apps, web apps and AI products. New case studies are on the way.</p>
+<section class="relative isolate flex flex-1 items-center overflow-hidden pb-14 pt-24 sm:pb-16 sm:pt-28 lg:min-h-svh lg:pb-10 lg:pt-20 tall:py-20" data-snap-section>
+  <div class="bg-grid absolute inset-0 -z-10" data-parallax="0.06"></div>
+  <div class="pointer-events-none absolute inset-0 -z-10" data-parallax="-0.1" aria-hidden="true">
+    <div class="glow-drift absolute -right-40 -top-40 size-[32rem] rounded-full bg-ultraviolet/40 blur-[120px]"></div>
   </div>
-</section>
 
-<section>
-  <div class="mx-auto max-w-7xl px-4 pb-24 sm:px-6 md:pb-32 lg:px-8">
-    <div class="flex flex-wrap gap-3" role="group" aria-label="Filter projects">
-      {% set filter_class = "rounded-full border border-lavender/20 px-5 py-2 text-sm font-semibold transition hover:border-mint aria-pressed:border-mint aria-pressed:bg-mint aria-pressed:text-night" %}
-      <button type="button" class="{{ filter_class }}" data-filter="all" aria-pressed="true">All</button>
-      {% for key, label in categories.items() %}
-      <button type="button" class="{{ filter_class }}" data-filter="{{ key }}" aria-pressed="false">{{ label }}</button>
-      {% endfor %}
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 wide:max-w-[88rem]">
+    <div class="hero-fade">{{ eyebrow("02 · Work") }}</div>
+    <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h1 class="font-display text-[clamp(2.5rem,6vw,4.25rem)] font-extrabold leading-[0.96] tracking-[-0.03em] tall:text-[clamp(3rem,6vw,5rem)]">
+          <span class="hero-line">Selected <span class="text-mint">work.</span></span>
+        </h1>
+        <p class="hero-fade mt-2.5 max-w-xl text-sm leading-relaxed text-lavender/70 sm:text-base tall:mt-3 tall:text-lg">
+          Mobile apps, web apps and AI products in active development — full case studies coming soon.
+        </p>
+      </div>
+
+      <div class="hero-fade flex flex-wrap gap-2 sm:gap-2.5" role="group" aria-label="Filter projects">
+        {% set filter_class = "rounded-full border border-lavender/20 px-4 py-1.5 text-sm font-semibold transition hover:border-mint aria-pressed:border-mint aria-pressed:bg-mint aria-pressed:text-night sm:px-5 sm:py-2" %}
+        <button type="button" class="{{ filter_class }}" data-filter="all" aria-pressed="true">All</button>
+        {% for key, label in categories.items() %}
+        <button type="button" class="{{ filter_class }}" data-filter="{{ key }}" aria-pressed="false">{{ label }}</button>
+        {% endfor %}
+      </div>
     </div>
 
-    <div class="mt-12 grid gap-x-8 gap-y-14 md:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-6 grid gap-x-7 gap-y-8 sm:mt-8 sm:grid-cols-2 lg:mt-6 lg:grid-cols-3 lg:gap-x-7 tall:mt-9 tall:gap-x-8">
       {% for project in projects %}
-      {{ project_card(project, (loop.index0 % 3) * 120) }}
+      {{ project_card(
+        project,
+        (loop.index0 % 3) * 90,
+        'sm:col-span-2 lg:col-span-1' if loop.last else '',
+        'aspect-[16/10] sm:aspect-[16/7] lg:aspect-[16/10] tall:aspect-[4/3]' if loop.last else 'aspect-[16/10] tall:aspect-[4/3]'
+      ) }}
       {% endfor %}
-
-      <a href="{{ url_for('contact') }}" class="group flex aspect-[4/3] flex-col justify-between rounded-3xl border-2 border-dashed border-lavender/20 p-8 transition hover:border-mint" data-reveal>
-        <span class="grid size-14 place-items-center rounded-2xl bg-lavender/10 text-mint transition group-hover:bg-mint group-hover:text-night">{{ icon("arrow-up-right", "size-7") }}</span>
-        <span>
-          <span class="block font-display text-3xl font-bold">Your project here.</span>
-          <span class="mt-2 block text-lavender/65">Have an idea for an app? Let's make it the next case study.</span>
-        </span>
-      </a>
     </div>
   </div>
 </section>
