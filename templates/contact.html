@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import icon, eyebrow, field %}
+
+{% block title %}Contact | Vieira Studios{% endblock %}
+{% block description %}Start a project with Vieira Studios: mobile apps, web apps and AI integration.{% endblock %}
+
+{# No "Have an idea?" banner on the contact page itself #}
+{% block cta %}{% endblock %}
+
+{% block content %}
+<section class="relative isolate overflow-hidden pb-24 pt-40 md:pb-32">
+  <div class="bg-grid absolute inset-0 -z-10"></div>
+  <div class="glow-drift absolute -left-40 -top-40 -z-10 size-[34rem] rounded-full bg-ultraviolet/40 blur-[120px]" aria-hidden="true"></div>
+  <div class="glow-drift-slow absolute -bottom-40 -right-40 -z-10 size-[28rem] rounded-full bg-mint/20 blur-[120px]" aria-hidden="true"></div>
+
+  <div class="mx-auto grid max-w-7xl gap-16 px-4 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:px-8">
+    <div>
+      <div class="hero-fade">{{ eyebrow("04 · Contact") }}</div>
+      <h1 class="font-display text-[clamp(3.25rem,9vw,7rem)] font-extrabold leading-[0.9] tracking-tighter">
+        <span class="hero-line">Let's build</span>
+        <span class="hero-line text-mint">something.</span>
+      </h1>
+      <p class="hero-fade mt-8 max-w-md text-lg text-lavender/70">Tell me about your idea, product or problem. A few sentences is plenty to get started, and I'll get back to you by email.</p>
+
+      <ul class="hero-fade mt-12 space-y-4">
+        {% for item in ["Mobile apps for iPhone and iPad", "Web apps and websites", "AI features and automation", "UI/UX design and prototypes"] %}
+        <li class="flex items-center gap-4 text-lavender/80">
+          <span class="grid size-8 place-items-center rounded-full bg-mint/15 text-mint">{{ icon("check", "size-4") }}</span>{{ item }}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div class="hero-fade rounded-[2rem] border border-lavender/10 bg-night/70 p-6 backdrop-blur-xl sm:p-10">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, text in messages %}
+      <p class="mb-6 rounded-2xl border border-red-400/40 bg-red-400/10 px-5 py-4 text-red-200" role="alert">{{ text }}</p>
+      {% endfor %}
+      {% endwith %}
+
+      {% if sent %}
+      <div class="py-12 text-center" role="status">
+        <span class="mx-auto grid size-16 place-items-center rounded-full bg-mint text-night">{{ icon("check", "size-8") }}</span>
+        <h2 class="mt-8 font-display text-4xl font-extrabold">Message sent.</h2>
+        <p class="mx-auto mt-4 max-w-sm text-lavender/70">Thanks for reaching out. I'll read your message and reply by email soon.</p>
+        <a href="{{ url_for('index') }}" class="mt-8 inline-block font-semibold text-mint hover:underline">Back to home</a>
+      </div>
+      {% else %}
+      <form method="post" action="{{ url_for('contact') }}" class="space-y-6" novalidate>
+        {{ form.csrf_token }}
+        <div class="grid gap-6 sm:grid-cols-2">
+          {{ field(form.name, autocomplete="name", placeholder="Jane Smith") }}
+          {{ field(form.email, autocomplete="email", placeholder="jane@company.com") }}
+        </div>
+        {{ field(form.project_type, "select") }}
+        {{ field(form.message, "textarea") }}
+
+        {# Honeypot field: hidden from people, tempting to bots #}
+        <div class="absolute -left-[9999px]" aria-hidden="true">
+          {{ form.website.label }} {{ form.website(tabindex="-1", autocomplete="off") }}
+        </div>
+
+        <button type="submit" class="group inline-flex w-full items-center justify-center gap-3 rounded-full bg-mint px-7 py-4 font-semibold text-night transition hover:bg-lavender">
+          Send message {{ icon("arrow", "size-5 transition group-hover:translate-x-1") }}
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

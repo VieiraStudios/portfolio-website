@@ -1,0 +1,95 @@
+{# Reusable template pieces ("macros" are like functions for HTML). #}
+
+{% macro icon(name, class="size-6") -%}
+<svg class="{{ class }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {%- if name == "phone" %}
+  <rect x="6.5" y="2" width="11" height="20" rx="2.5"/><path d="M11 18.5h2"/>
+  {%- elif name == "browser" %}
+  <rect x="2" y="4" width="20" height="16" rx="2.5"/><path d="M2 9h20M6 6.5h.01M9 6.5h.01"/>
+  {%- elif name == "sparkle" %}
+  <path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="M18.5 14.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>
+  {%- elif name == "layers" %}
+  <path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>
+  {%- elif name == "arrow" %}
+  <path d="M5 12h14M13 6l6 6-6 6"/>
+  {%- elif name == "arrow-up-right" %}
+  <path d="M7 17 17 7M8 7h9v9"/>
+  {%- elif name == "menu" %}
+  <path d="M4 7h16M4 12h16M4 17h16"/>
+  {%- elif name == "check" %}
+  <path d="m5 12 5 5L20 7"/>
+  {%- endif %}
+</svg>
+{%- endmacro %}
+
+{% macro project_card(project, delay=0) -%}
+{% set category_icons = {"mobile": "phone", "web": "browser", "ai": "sparkle"} %}
+{% set themes = {
+  "violet": "bg-linear-to-br from-ultraviolet to-night-soft text-lavender",
+  "mint": "bg-linear-to-br from-mint to-ultraviolet text-night",
+  "lavender": "bg-lavender text-night",
+} %}
+<article data-category="{{ project.category }}" data-reveal data-reveal-delay="{{ delay }}" class="group">
+  <div class="relative aspect-[4/3] overflow-hidden rounded-3xl {{ themes[project.theme] }} transition duration-500 group-hover:-translate-y-2 group-hover:rotate-[-1deg]">
+    <div class="bg-grid absolute inset-0 opacity-60"></div>
+    <div class="absolute inset-0 grid place-items-center transition duration-700 group-hover:scale-110">
+      {{ icon(category_icons[project.category], "size-24 opacity-90") }}
+    </div>
+    {% if project.status == "coming_soon" %}
+    <span class="absolute left-5 top-5 rounded-full bg-night/80 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-mint backdrop-blur">Coming soon</span>
+    {% endif %}
+  </div>
+  <div class="mt-5 flex items-start justify-between gap-4">
+    <div>
+      <h3 class="font-display text-2xl font-bold">{{ project.title }}</h3>
+      <p class="mt-2 text-lavender/70">{{ project.summary }}</p>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {% for tag in project.tags %}
+        <li class="rounded-full border border-lavender/15 px-3 py-1 text-xs text-lavender/70">{{ tag }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% if project.url %}
+    <a href="{{ project.url }}" class="shrink-0 rounded-full border border-lavender/20 p-3 transition hover:bg-mint hover:text-night" aria-label="View {{ project.title }}">
+      {{ icon("arrow-up-right", "size-5") }}
+    </a>
+    {% endif %}
+  </div>
+</article>
+{%- endmacro %}
+
+{% macro button(href, label, style="primary") -%}
+{% set styles = {
+  "primary": "bg-mint text-night hover:bg-lavender",
+  "ghost": "border border-lavender/25 text-lavender hover:border-mint hover:text-mint",
+  "dark": "bg-night text-lavender hover:bg-night-soft",
+} %}
+<a href="{{ href }}" class="group inline-flex items-center gap-3 rounded-full px-7 py-4 font-semibold transition {{ styles[style] }}">
+  {{ label }}
+  {{ icon("arrow", "size-5 transition group-hover:translate-x-1") }}
+</a>
+{%- endmacro %}
+
+{% macro eyebrow(text) -%}
+<p class="mb-5 flex items-center gap-3 text-sm font-semibold uppercase tracking-[0.2em] text-mint">
+  <span class="h-px w-10 bg-mint"></span>{{ text }}
+</p>
+{%- endmacro %}
+
+{% macro field(f, type="input") -%}
+<div>
+  <label for="{{ f.id }}" class="mb-2 block text-sm font-semibold text-lavender/80">{{ f.label.text }}</label>
+  {% set base = "w-full rounded-2xl border bg-night-soft px-5 py-4 text-lavender placeholder:text-lavender/30 transition focus:border-mint focus:outline-none" %}
+  {% set border = "border-red-400" if f.errors else "border-lavender/15" %}
+  {% if type == "textarea" %}
+  {{ f(class=base ~ " " ~ border ~ " min-h-44", rows=6, placeholder="What are you building, who is it for, and when do you need it?") }}
+  {% elif type == "select" %}
+  {{ f(class=base ~ " " ~ border) }}
+  {% else %}
+  {{ f(class=base ~ " " ~ border, **kwargs) }}
+  {% endif %}
+  {% for error in f.errors %}
+  <p class="mt-2 text-sm text-red-300">{{ error }}</p>
+  {% endfor %}
+</div>
+{%- endmacro %}

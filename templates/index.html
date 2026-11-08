@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% from "partials/macros.html" import icon, button, eyebrow, project_card %}
+
+{% block content %}
+{# ---------- Hero ---------- #}
+<section class="relative isolate flex min-h-svh items-center overflow-hidden pb-20 pt-32">
+  <div class="bg-grid absolute inset-0 -z-10"></div>
+  <div class="glow-drift absolute -left-40 -top-40 -z-10 size-[36rem] rounded-full bg-ultraviolet/45 blur-[120px]" aria-hidden="true"></div>
+  <div class="glow-drift-slow absolute -bottom-48 right-[-10rem] -z-10 size-[32rem] rounded-full bg-mint/25 blur-[120px]" aria-hidden="true"></div>
+
+  <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="hero-fade">{{ eyebrow("Vieira Studios · Mobile · Web · AI") }}</div>
+
+    <h1 class="font-display text-[clamp(3.75rem,14vw,12rem)] font-extrabold leading-[0.88] tracking-tighter">
+      <span class="hero-line">Ideas</span>
+      <span class="hero-line">into <span class="bg-linear-to-r from-ultraviolet via-[#9B6BFF] to-mint bg-clip-text text-transparent">apps.</span></span>
+    </h1>
+
+    <div class="hero-fade mt-10 grid gap-10 md:grid-cols-[1fr_auto] md:items-end">
+      <div>
+        <p class="font-display text-2xl font-bold sm:text-4xl">
+          <span class="sr-only">We build mobile apps, web apps and AI products.</span>
+          <span aria-hidden="true">We build <span class="rotator text-mint" data-rotator data-words='{{ ["mobile apps", "web apps", "AI products", "great experiences"] | tojson }}'>mobile apps</span></span>
+        </p>
+        <p class="mt-5 max-w-xl text-lg text-lavender/70">Vieira Studios designs and builds mobile, web and AI products, taking ideas from first sketch to launch day.</p>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        {{ button(url_for('work'), "See the work") }}
+        {{ button(url_for('contact'), "Get in touch", "ghost") }}
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------- Marquee band ---------- #}
+<div class="overflow-hidden border-y border-night bg-mint py-5 text-night" aria-hidden="true">
+  <div class="marquee-track">
+    {% for _ in range(2) %}
+    <div class="flex shrink-0 items-center">
+      {% for word in ["Mobile apps", "Web apps", "AI integration", "UI/UX design", "iOS", "Full-stack"] %}
+      <span class="px-8 font-display text-3xl font-extrabold uppercase tracking-tight sm:text-5xl">{{ word }}</span>
+      <span class="text-3xl sm:text-4xl">✦</span>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{# ---------- Services ---------- #}
+<section class="bg-lavender text-night">
+  <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32 lg:px-8">
+    <div class="grid gap-10 md:grid-cols-2 md:items-end" data-reveal>
+      <div>
+        <p class="mb-5 text-sm font-semibold uppercase tracking-[0.2em] text-ultraviolet">What we do</p>
+        <h2 class="font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl">One studio. Every screen.</h2>
+      </div>
+      <p class="text-lg text-night/70">Design, engineering and AI under one roof, so your product feels like one idea instead of a patchwork of vendors.</p>
+    </div>
+
+    <div class="mt-16 grid gap-5 sm:grid-cols-2">
+      {% for service in services %}
+      <article class="group relative overflow-hidden rounded-3xl border border-night/10 bg-white/60 p-8 transition duration-500 hover:-translate-y-1 hover:bg-night hover:text-lavender md:p-10" data-reveal data-reveal-delay="{{ loop.index0 * 100 }}">
+        <div class="flex items-start justify-between">
+          <span class="grid size-14 place-items-center rounded-2xl bg-ultraviolet text-lavender transition group-hover:bg-mint group-hover:text-night">{{ icon(service.icon, "size-7") }}</span>
+          <span class="font-display text-sm font-bold text-night/40 group-hover:text-lavender/40">0{{ loop.index }}</span>
+        </div>
+        <h3 class="mt-10 font-display text-3xl font-bold">{{ service.title }}</h3>
+        <p class="mt-3 max-w-md text-night/70 transition group-hover:text-lavender/70">{{ service.description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------- Selected work ---------- #}
+<section>
+  <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32 lg:px-8">
+    <div class="flex flex-wrap items-end justify-between gap-8" data-reveal>
+      <div>
+        {{ eyebrow("Selected work") }}
+        <h2 class="font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl">Fresh from the studio.</h2>
+      </div>
+      {{ button(url_for('work'), "All work", "ghost") }}
+    </div>
+
+    <div class="mt-16 grid gap-10 md:grid-cols-3">
+      {% for project in projects %}
+      {{ project_card(project, loop.index0 * 120) }}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ---------- Process ---------- #}
+<section class="border-t border-lavender/10 bg-night-soft">
+  <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32 lg:px-8">
+    <div data-reveal>
+      {{ eyebrow("How we work") }}
+      <h2 class="max-w-3xl font-display text-5xl font-extrabold leading-[0.95] tracking-tight sm:text-7xl">From idea to launch, step by step.</h2>
+    </div>
+
+    <ol class="mt-16 grid gap-px overflow-hidden rounded-3xl border border-lavender/10 bg-lavender/10 sm:grid-cols-2 lg:grid-cols-4">
+      {% for step in process %}
+      <li class="group bg-night-soft p-8 transition hover:bg-night" data-reveal data-reveal-delay="{{ loop.index0 * 100 }}">
+        <span class="font-display text-6xl font-extrabold text-ultraviolet transition group-hover:text-mint">0{{ loop.index }}</span>
+        <h3 class="mt-8 font-display text-2xl font-bold">{{ step.title }}</h3>
+        <p class="mt-3 text-lavender/65">{{ step.description }}</p>
+      </li>
+      {% endfor %}
+    </ol>
+  </div>
+</section>
+{% endblock %}

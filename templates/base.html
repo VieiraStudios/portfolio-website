@@ -1,0 +1,102 @@
+{% from "partials/macros.html" import icon, button %}
+{% set nav_items = [("index", "Home"), ("work", "Work"), ("about", "About"), ("contact", "Contact")] %}
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Vieira Studios | Mobile, web and AI apps{% endblock %}</title>
+  <meta name="description" content="{% block description %}Vieira Studios designs and builds mobile apps, web apps and AI-powered products.{% endblock %}">
+  <meta name="theme-color" content="#0E0B1A">
+
+  {# Social sharing previews (LinkedIn, iMessage, X, etc.) #}
+  <meta property="og:site_name" content="Vieira Studios">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ self.description() }}">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+
+  {# Fonts: Syne for headlines, Inter for body text #}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body class="bg-night font-sans text-lavender antialiased">
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-mint focus:px-5 focus:py-3 focus:text-night">Skip to content</a>
+
+  <header class="fixed inset-x-0 top-0 z-40 border-b border-lavender/10 bg-night/70 backdrop-blur-xl">
+    <nav class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Main">
+      <a href="{{ url_for('index') }}" class="flex items-center gap-3" aria-label="Vieira Studios home">
+        <img src="{{ url_for('static', filename='favicon.svg') }}" alt="" class="size-9">
+        <span class="font-display text-lg font-extrabold tracking-tight">Vieira<span class="text-mint">.</span>Studios</span>
+      </a>
+
+      <ul class="hidden items-center gap-1 md:flex">
+        {% for endpoint, label in nav_items %}
+        <li>
+          <a href="{{ url_for(endpoint) }}"
+             class="rounded-full px-4 py-2 text-sm font-medium transition hover:text-mint {{ 'text-mint' if request.endpoint == endpoint else 'text-lavender/75' }}"
+             {% if request.endpoint == endpoint %}aria-current="page"{% endif %}>
+            <span class="mr-1 text-xs text-ultraviolet">0{{ loop.index }}</span>{{ label }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+
+      <a href="{{ url_for('contact') }}" class="hidden rounded-full bg-lavender px-5 py-2.5 text-sm font-semibold text-night transition hover:bg-mint md:inline-flex">Start a project</a>
+
+      <button type="button" class="rounded-full border border-lavender/20 p-2.5 md:hidden" data-menu-button aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu">
+        {{ icon("menu", "size-5") }}
+      </button>
+    </nav>
+
+    <div id="mobile-menu" class="hidden border-t border-lavender/10 px-4 pb-6 md:hidden" data-menu>
+      <ul class="flex flex-col pt-2">
+        {% for endpoint, label in nav_items %}
+        <li>
+          <a href="{{ url_for(endpoint) }}" class="flex items-baseline gap-3 py-3 font-display text-3xl font-bold {{ 'text-mint' if request.endpoint == endpoint else '' }}">
+            <span class="text-sm text-ultraviolet">0{{ loop.index }}</span>{{ label }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </header>
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block cta %}
+  <section class="bg-ultraviolet">
+    <div class="mx-auto max-w-7xl px-4 py-24 sm:px-6 md:py-32 lg:px-8" data-reveal>
+      <h2 class="max-w-4xl font-display text-5xl font-extrabold leading-[0.95] tracking-tight text-balance sm:text-7xl">Have an idea? Let's build it.</h2>
+      <p class="mt-6 max-w-xl text-lg text-lavender/85">Tell me what you're working on and I'll help you turn it into an app people love to use.</p>
+      <div class="mt-10">{{ button(url_for('contact'), "Start a project", "dark") }}</div>
+    </div>
+  </section>
+  {% endblock %}
+
+  <footer class="border-t border-lavender/10">
+    <div class="mx-auto flex max-w-7xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
+      <div>
+        <p class="font-display text-lg font-extrabold">Vieira<span class="text-mint">.</span>Studios</p>
+        <p class="mt-1 text-sm text-lavender/60">Mobile, web and AI products.</p>
+      </div>
+      <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm text-lavender/70">
+        {% for endpoint, label in nav_items %}
+        <li><a href="{{ url_for(endpoint) }}" class="hover:text-mint">{{ label }}</a></li>
+        {% endfor %}
+        {% for link in social_links %}
+        <li><a href="{{ link.url }}" class="hover:text-mint" target="_blank" rel="noopener">{{ link.label }} ↗</a></li>
+        {% endfor %}
+      </ul>
+      <p class="text-sm text-lavender/50">&copy; {{ current_year }} Vieira Studios</p>
+    </div>
+  </footer>
+</body>
+</html>
