@@ -12,7 +12,7 @@
   --color-ultraviolet: #7C3AED;
   --color-mint: #2EE6A6;
 
-  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -26,6 +26,22 @@
     outline: 2px solid var(--color-mint);
     outline-offset: 3px;
   }
+}
+
+/* Smooth inertia scrolling (Lenis). These rules come from Lenis's own
+   stylesheet; Lenis adds the .lenis classes to <html> while it runs. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis:not(.lenis-autoToggle).lenis-stopped {
+  overflow: clip;
+}
+.lenis [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
 }
 
 /* Faint grid pattern used behind hero sections and project visuals */
