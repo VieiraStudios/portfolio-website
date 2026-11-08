@@ -5,11 +5,25 @@ document.documentElement.classList.add("js");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 document.addEventListener("DOMContentLoaded", () => {
+  setupSmoothScroll();
   setupMobileMenu();
   setupRotatingWords();
   setupScrollReveal();
   setupWorkFilter();
 });
+
+// Smooth "inertia" scrolling with Lenis (public/static/js/vendor/lenis.min.js):
+// wheel and trackpad scrolling glides and eases to a stop. Phones and tablets
+// keep their native touch scrolling, which already feels smooth.
+function setupSmoothScroll() {
+  if (prefersReducedMotion || typeof window.Lenis !== "function") return;
+
+  window.lenis = new window.Lenis({
+    autoRaf: true, // run Lenis's animation loop automatically
+    lerp: 0.1, // how quickly scrolling catches up (lower = floatier)
+    anchors: true, // smooth-scroll to #links such as "Skip to content"
+  });
+}
 
 // Open/close the navigation menu on small screens.
 function setupMobileMenu() {
