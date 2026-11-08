@@ -67,6 +67,19 @@
 .rotator.is-out  { transform: translateY(-0.6em); opacity: 0; }
 .rotator.is-prep { transform: translateY(0.6em); opacity: 0; transition: none; }
 
+/* Blinking text cursor in the About page code card */
+.code-cursor {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+  background: var(--color-mint);
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
 /* Endless scrolling band of text */
 .marquee-track {
   display: flex;
@@ -90,7 +103,7 @@
 
 /* Respect visitors who turn off animations in their device settings */
 @media (prefers-reduced-motion: reduce) {
-  .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .marquee-track { animation: none; }
+  .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .marquee-track, .code-cursor { animation: none; }
   .js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .rotator { transition: none; }
 }

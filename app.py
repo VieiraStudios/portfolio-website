@@ -1,4 +1,3 @@
-import json
 import os
 import secrets
 import smtplib
@@ -8,19 +7,75 @@ from datetime import datetime, timezone
 from email.message import EmailMessage
 from pathlib import Path
 
+import click
 from flask import Flask, flash, redirect, render_template, request, url_for
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from content import CATEGORIES, PROCESS, PROJECT_TYPES, PROJECTS, SERVICES, SOCIAL_LINKS, TOOLKIT
 from forms import ContactForm
 
-app = Flask(__name__)
+ON_VERCEL = bool(os.environ.get("VERCEL"))
+
+# Static files (CSS, JS, images) live in public/static. Locally Flask serves
+# them; on Vercel the public/ folder is served straight from its global CDN.
+app = Flask(__name__, static_folder="public/static", static_url_path="/static")
+
+if ON_VERCEL:
+    # Vercel sits in front of the app as a proxy; trust its X-Forwarded-For
+    # header so request.remote_addr is the visitor's real IP address.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 # SECRET_KEY signs session cookies and CSRF tokens. In production it must be
 # set as an environment variable (see .env.example). Locally, a random key is
 # generated each time the server starts.
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+secret_key = os.environ.get("SECRET_KEY")
+if ON_VERCEL and not secret_key:
+    raise RuntimeError("Set the SECRET_KEY environment variable in your Vercel project settings.")
+app.config["SECRET_KEY"] = secret_key or secrets.token_hex(32)
 app.config["MAX_CONTENT_LENGTH"] = 64 * 1024  # reject request bodies over 64 KB
-app.config["MESSAGES_FILE"] = Path(app.instance_path) / "messages.jsonl"
+
+
+def database_url() -> str:
+    """Postgres (Neon) in production; a local SQLite file for development."""
+    url = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
+    if not url:
+        Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+        return "sqlite:///" + str(Path(app.instance_path) / "messages.db")
+    # SQLAlchemy needs to be told to use the psycopg (v3) driver.
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url()
+# Check connections are alive before use; serverless databases close idle ones.
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(app, model_class=Base)
+
+
+class Message(db.Model):
+    """A contact-form submission. SQLAlchemy writes all values as query
+    parameters, never by gluing strings into SQL, which prevents SQL injection."""
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    received_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    name: Mapped[str] = mapped_column(db.String(100))
+    email: Mapped[str] = mapped_column(db.String(254))
+    project_type: Mapped[str] = mapped_column(db.String(50))
+    body: Mapped[str] = mapped_column(db.Text)
+
+
+with app.app_context():
+    db.create_all()  # creates the table the first time; does nothing after that
 
 # Simple rate limit for the contact form: max submissions per IP per window.
 CONTACT_LIMIT = 5
@@ -53,6 +108,8 @@ def set_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if ON_VERCEL:
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
     return response
 
 
@@ -89,14 +146,14 @@ def contact():
             flash("You've sent several messages already. Please try again later.", "error")
             return redirect(url_for("contact"))
 
-        message = {
-            "received_at": datetime.now(timezone.utc).isoformat(),
-            "name": form.name.data.strip(),
-            "email": form.email.data.strip(),
-            "project_type": dict(PROJECT_TYPES)[form.project_type.data],
-            "message": form.message.data.strip(),
-        }
-        _save_message(message)
+        message = Message(
+            name=form.name.data.strip(),
+            email=form.email.data.strip(),
+            project_type=dict(PROJECT_TYPES)[form.project_type.data],
+            body=form.message.data.strip(),
+        )
+        db.session.add(message)
+        db.session.commit()
         _email_message(message)
 
         # Post/Redirect/Get: redirecting stops the browser from re-sending
@@ -111,6 +168,15 @@ def page_not_found(error):
     return render_template("404.html"), 404
 
 
+@app.cli.command("messages")
+@click.option("--limit", default=20, help="How many recent messages to show.")
+def list_messages(limit):
+    """Show recent contact-form messages: uv run flask --app app messages"""
+    rows = db.session.execute(db.select(Message).order_by(Message.received_at.desc()).limit(limit)).scalars()
+    for m in rows:
+        click.echo(f"\n[{m.received_at:%Y-%m-%d %H:%M}] {m.name} <{m.email}> · {m.project_type}\n{m.body}")
+
+
 def _rate_limited(ip: str) -> bool:
     now = time.monotonic()
     attempts = _contact_attempts[ip]
@@ -122,31 +188,23 @@ def _rate_limited(ip: str) -> bool:
     return False
 
 
-def _save_message(message: dict) -> None:
-    """Append the message to a local file (one JSON object per line)."""
-    path = Path(app.config["MESSAGES_FILE"])
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(message) + "\n")
-
-
-def _email_message(message: dict) -> None:
-    """Email the message to you, if email settings are configured in .env."""
+def _email_message(message: Message) -> None:
+    """Email the message to you, if email settings are configured (optional)."""
     server = os.environ.get("MAIL_SERVER")
     recipient = os.environ.get("MAIL_TO")
     if not server or not recipient:
         return
 
     email = EmailMessage()
-    email["Subject"] = f"New enquiry: {message['project_type']}"
+    email["Subject"] = f"New enquiry: {message.project_type}"
     email["From"] = os.environ.get("MAIL_FROM", os.environ.get("MAIL_USERNAME", recipient))
     email["To"] = recipient
-    email["Reply-To"] = message["email"]
+    email["Reply-To"] = message.email
     email.set_content(
-        f"Name: {message['name']}\n"
-        f"Email: {message['email']}\n"
-        f"Project type: {message['project_type']}\n\n"
-        f"{message['message']}\n"
+        f"Name: {message.name}\n"
+        f"Email: {message.email}\n"
+        f"Project type: {message.project_type}\n\n"
+        f"{message.body}\n"
     )
 
     try:
@@ -157,7 +215,7 @@ def _email_message(message: dict) -> None:
                 smtp.login(username, os.environ.get("MAIL_PASSWORD", ""))
             smtp.send_message(email)
     except (OSError, smtplib.SMTPException) as exc:
-        # The message is already saved to the file, so don't fail the request.
+        # The message is already saved in the database, so don't fail the request.
         app.logger.error("Could not email contact message: %s", exc)
 
 

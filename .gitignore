@@ -19,3 +19,6 @@ instance/
 
 # Test cache
 .pytest_cache/
+
+# Vercel CLI local settings
+.vercel/
