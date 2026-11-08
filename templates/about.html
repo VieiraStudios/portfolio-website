@@ -22,12 +22,27 @@
       </div>
     </div>
 
-    {# Portrait placeholder: replace with <img src="{{ url_for('static', filename='images/joshua.jpg') }}" ...> #}
+    {# Code card: introduces the founder "in code" instead of a photo #}
     <div class="hero-fade relative mx-auto w-full max-w-md">
       <div class="absolute -inset-3 rotate-3 rounded-[2.5rem] bg-linear-to-br from-ultraviolet to-mint" aria-hidden="true"></div>
       <div class="relative grid aspect-[4/5] place-items-center overflow-hidden rounded-[2rem] bg-night-soft">
         <div class="bg-grid absolute inset-0"></div>
-        <span class="relative font-display text-9xl font-extrabold text-lavender/90">JV</span>
+        <figure class="relative w-[88%] rounded-2xl border border-lavender/15 bg-night p-5 font-mono text-[13px] leading-7 shadow-2xl shadow-night sm:text-sm" aria-label="Joshua Vieira, founder of Vieira Studios, builds mobile, web and AI products people love.">
+          <div class="mb-4 flex items-center gap-2" aria-hidden="true">
+            <span class="size-3 rounded-full bg-[#FF5F57]"></span>
+            <span class="size-3 rounded-full bg-[#FEBC2E]"></span>
+            <span class="size-3 rounded-full bg-[#28C840]"></span>
+            <span class="ml-3 text-xs text-lavender/40">studio.ts</span>
+          </div>
+          <pre class="overflow-hidden whitespace-pre-wrap" aria-hidden="true"><span class="text-[#B794FF]">const</span> studio = {
+  founder: <span class="text-mint">"Joshua Vieira"</span>,
+  builds: [<span class="text-mint">"mobile"</span>, <span class="text-mint">"web"</span>, <span class="text-mint">"AI"</span>],
+  focus: <span class="text-mint">"products people love"</span>,
+  available: <span class="text-[#B794FF]">true</span>,
+};
+
+<span class="text-lavender/40">// let's build something</span> <span class="code-cursor"></span></pre>
+        </figure>
         <span class="absolute bottom-6 left-6 rounded-full bg-night/80 px-4 py-2 text-sm font-semibold backdrop-blur">Joshua Vieira · Founder</span>
       </div>
     </div>
