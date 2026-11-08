@@ -78,6 +78,7 @@ html.lenis body {
 /* Rotating words: "We build [mobile apps -> web apps -> AI products]" */
 .rotator {
   display: inline-block;
+  white-space: nowrap;
   transition: transform 0.45s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.45s ease;
 }
 .rotator.is-out  { transform: translateY(-0.6em); opacity: 0; }
@@ -96,16 +97,6 @@ html.lenis body {
   50% { opacity: 0; }
 }
 
-/* Endless scrolling band of text */
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 28s linear infinite;
-}
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
-
 /* Scroll reveal: only hidden when JavaScript is running (html.js) */
 .js [data-reveal] {
   opacity: 0;
@@ -119,7 +110,7 @@ html.lenis body {
 
 /* Respect visitors who turn off animations in their device settings */
 @media (prefers-reduced-motion: reduce) {
-  .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .marquee-track, .code-cursor { animation: none; }
+  .hero-line, .hero-fade, .glow-drift, .glow-drift-slow, .code-cursor { animation: none; }
   .js [data-reveal] { opacity: 1; transform: none; transition: none; }
   .rotator { transition: none; }
 }
