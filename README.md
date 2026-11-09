@@ -36,10 +36,10 @@ You need [uv](https://docs.astral.sh/uv/).
 git clone https://github.com/VieiraStudios/portfolio-website.git
 cd portfolio-website
 uv sync
-uv run flask --app app run --debug --port 5001
+uv run flask --app app run --debug
 ```
 
-Then open http://127.0.0.1:5001. Locally, messages go to a SQLite file in `instance/`. To use other settings, copy `.env.example` to `.env`.
+Then open http://127.0.0.1:5000. Locally, messages go to a SQLite file in `instance/`. To use other settings, copy `.env.example` to `.env`.
 
 **Styles:** after changing classes in the templates, rebuild the CSS:
 
